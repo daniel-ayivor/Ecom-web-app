@@ -13,6 +13,12 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 
 import { groupBy } from "lodash";
+import { RegisterTable } from "../RegisterAdmin/RegisterTable";
+import { UserType } from "../RegisterAdmin/Register";
+import { GiPayMoney } from "react-icons/gi";
+import { RegisterIndexTable } from "../RegisterAdmin/RegisterIndex";
+import { ProductTableIndex } from "../Product/ProductTableIndex";
+import { ProductAttributes } from "@/Admin/Dialogs/UpdateDialog";
 
 
 const areaData = [
@@ -41,102 +47,124 @@ type DataTableProps = {
   onDelete: (item: any) => void;
 };
 
-type PackageType = {
-  weight: number;
-  id: number;
-  username: string;
-  email: string;
-  contact: string;
-  packageName: string;
-  packageTypes: string; // If this should allow empty strings, keep it as a string type.
-  dimensions: string;
-  shipmentStatus: string;
-  trackingCode: string;
-  createdAt: string; // Consider using Date if you plan to work with date objects.
-  updatedAt: string; // Similarly, use Date if you need date manipulation.
-};
+
 
 const tableColumns = [
   { key: "id", label: "ID" },
-  { key: "username", label: "Username" },
+  { key: "name", label: "Name" },
   { key: "email", label: "Email" },
-  { key: "packageName", label: "Package Name" },
-  { key: "trackingCode", label: "Tracking Code" },
-  { key: "dimensions", label: "Dimensions" },
-  { key: "weight", label: "Weight (kg)" },
   { key: "createdAt", label: "Created At" },
   { key: "updatedAt", label: "Updated At" },
-  { key: "shipmentStatus", label: "Status" },
+];
+
+const ProductColumns = [
+  { key: "id", label: "ID" },
+  { key: "image", label: "Image" },
+  { key: "title", label: "Title" },
+  { key: "price", label: "Price" },
+  // { key: "text", label: "Text" },
+  { key: "rating", label: "Rating" },
+  { key: "category", label: "Category" },
+  { key: "createdAt", label: "Create At" },
+  { key: "updatedAt", label: "Updated At" },
+  { key: "size", label: "Size" }
 ];
 
 const Index = () => {
   const [isOpen, setIsOpen] = useState(false);
   const  [Submitting,setSubmitting] = useState(false)
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [products, setProducts] = useState<ProductAttributes[]>([]);
 
-  const [Package, setPackage] = useState<PackageType[]>([]); 
-
-  const [shipmentData, setShipmentData] = useState([]);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/track/shipments") // Adjust URL to your endpoint
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.shipments) {
-          setShipmentData(data.shipments);
-        }
-      })
-      .catch((error) => console.error("Error fetching shipments:", error));
-  }, []);
+  const FetchProduct = async () => {
+    setSubmitting(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/all`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      const result = await response.json();
+    //   console.log(result, "result"); // Log the response to confirm its structure
+  
+      if (response.ok && result?.products) {
+        const formattedProducts = result.products.map((product: ProductAttributes) => ({
+            ...product, 
+          
+           
+            createdAt: moment(product.createdAt).format("MMMM Do YYYY, h:mm:ss a"),
+            updatedAt: moment(product.updatedAt).format("MMMM Do YYYY, h:mm:ss a"),
+            
+          }));
+          setProducts(formattedProducts); 
+        //   console.log(formattedProducts, 'formatted')
+          // Update the state with the formatted data
+          toast.success("Products retrieved successfully!");
+      } else {
+        toast.error(result.message || "Failed to retrieve products.");
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
   
 
-  const Fetchpackage = async () => {
-      setSubmitting(true); 
+useEffect(() => {
+    FetchProduct();
+}, []);
+
+  const FetchUsers = async () => {
+      setSubmitting(true);
       try {
           const token = localStorage.getItem("access_token");
-          console.log(token, "token package");
-          
-  
+          console.log(token, "token")
           if (!token) {
               toast.error("No access token found. Please login again.");
               return;
           }
-  
-          const response = await fetch(`http://localhost:5000/track/shipments`, {
+
+          const response = await fetch(`http://localhost:8000/api/user/getUsers`, {
               method: "GET",
               headers: {
                   "Content-Type": "application/json",
                   "Authorization": `Bearer ${token}`,
               },
           });
-  
+
+          if (!response.ok) {
+              const errorMessage = `Error ${response.status}: ${response.statusText}`;
+              toast.error(errorMessage);
+              throw new Error(errorMessage);
+          }
+
           const result = await response.json();
-          console.log(result, "index");
-  
-          if (response.ok) {
-              toast.success("Users retrieved successfully!");
-              const formattedUsers = result.shipments.slice(0, 5).map((packages: PackageType) => ({
-                  ...packages,
-                  createdAt: moment(packages.createdAt).format("MMMM Do YYYY, h:mm:ss a"),
-                  updatedAt: moment(packages.updatedAt).format("MMMM Do YYYY, h:mm:ss a"),
+          console.log(result, "Fetched Users");
+
+          if (result?.users) {
+              const formattedUsers = result.users.map((user: UserType) => ({
+                  ...user,
+                  createdAt: moment(user.createdAt).format("MMMM Do YYYY, h:mm:ss a"),
+                  updatedAt: moment(user.updatedAt).format("MMMM Do YYYY, h:mm:ss a"),
               }));
-  
-              setPackage(formattedUsers);
+
+              setUsers(formattedUsers);
           } else {
-              toast.error(result.message || "Users retrieving failed. Please try again.");
+              toast.error(result.message || "Failed to retrieve users.");
           }
       } catch (error: any) {
-          console.error("Error during users retrieving:", error);
-          toast.error("Something went wrong. Please try again later.");
+          console.error("Error fetching users:", error);
+          toast.error("An error occurred while fetching users.");
       } finally {
-          setSubmitting(false); 
+          setSubmitting(false);
       }
   };
-  
-  useEffect(() => {
-      Fetchpackage();
-  }, []); 
 
-
+useEffect(()=>{
+  FetchUsers()
+}, [])
 // Transform data for AreaChart (e.g., Total Weight per Month)
 const getMonthlyData = (data: any[]) => {
   const grouped = groupBy(data, (item) => moment(item.createdAt).format("MMM YYYY"));
@@ -147,7 +175,7 @@ const getMonthlyData = (data: any[]) => {
 };
 
 // Example: Fetch the monthly data
-const areaChartData = getMonthlyData(shipmentData);
+const areaChartData = getMonthlyData(users);
 
 // Transform data for BarChart (e.g., Shipment Count per Month)
 const getMonthlyCounts = (data: any[]) => {
@@ -159,7 +187,7 @@ const getMonthlyCounts = (data: any[]) => {
 };
 
 // Example: Fetch the monthly counts
-const barChartData = getMonthlyCounts(shipmentData);
+const barChartData = getMonthlyCounts(users);
 
 
 const [registeredUsersCount, setRegisteredUsersCount] = useState(0);
@@ -171,42 +199,6 @@ const [previousTrackingDataCount, setPreviousTrackingDataCount] = useState(0);
 const [userPercentageChange, setUserPercentageChange] = useState(0);
 const [trackingPercentageChange, setTrackingPercentageChange] = useState(0);
 
-// Fetch Users Count
-useEffect(() => {
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/auth/getAllUser");
-      const data = await response.json();
-
-      if (data.users && Array.isArray(data.users)) {
-        setPreviousUsersCount(registeredUsersCount); // Update previous count
-        setRegisteredUsersCount(data.users.length); // Update current count
-      } else {
-        console.error("Unexpected response format:", data);
-        toast.error("Failed to fetch users.");
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Error fetching users.");
-    }
-  };
-
-  fetchUsers();
-}, []);
-
-
-// Fetch Tracking Data Count
-useEffect(() => {
-  fetch("http://localhost:5000/track/shipments")
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.shipments) {
-        setPreviousTrackingDataCount(trackingDataCount);
-        setTrackingDataCount(data.shipments.length);
-      }
-    })
-    .catch((error) => console.error("Error fetching tracking data:", error));
-}, []);
 
 // Calculate Percentage Changes
 useEffect(() => {
@@ -235,44 +227,54 @@ useEffect(() => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
   <StatCard
     title="Total Revenue"
-    value="$45,231.89"
+    value={products.length}
     change="+20.1%"
     icon={<DollarSign className="h-4 w-4" />}
   />
   <StatCard
     title="Registered Users"
-    value={registeredUsersCount.toString()}
+    value={users.length}
     change={`${userPercentageChange > 0 ? "+" : ""}${userPercentageChange.toFixed(1)}%`}
     icon={<Users className="h-4 w-4" />}
   />
   <StatCard
-    title="Tracking Data"
+    title="Orders Data"
     value={trackingDataCount.toString()}
     change={`${trackingPercentageChange > 0 ? "+" : ""}${trackingPercentageChange.toFixed(1)}%`}
     icon={<Activity className="h-4 w-4" />}
   />
   <StatCard
-    title="Conversion Rate"
+    title="Payment Rate"
     value="2.3%"
     change="+4.1%"
-    icon={<ArrowUpRight className="h-4 w-4" />}
+    icon={<GiPayMoney className="h-4 w-4" />}
   />
 </div>
 
            
-        <Card className="p-6">
-              <h2 className="mb-4 text-lg font-semibold">Recent Users</h2>
-           
-              <DataTable
-                data={Package}
-                columns={tableColumns}
-                onEdit={(item) => console.log("Edit", item)}
-                onDelete={(item) => console.log("Delete", item)}
-              />
-            </Card>
+          <Card className="p-6">
+                <h2 className="mb-4 text-lg font-semibold">Recent Users</h2>
+            
+                <RegisterIndexTable
+                  data={users}
+                  columns={tableColumns}
+                  onEdit={(item) => console.log("Edit", item)}
+                  onDelete={(item) => console.log("Delete", item)}
+                />
+              </Card>
+              <Card className="p-6">
+                <h2 className="mb-4 text-lg font-semibold">Recent Product</h2>
+            
+                <ProductTableIndex
+                  data={products}
+                  columns={ProductColumns}
+                  onEdit={(item) => console.log("Edit", item)}
+                  onDelete={(item) => console.log("Delete", item)}
+                />
+              </Card>
         <div className="grid gap-6 md:grid-cols-2">
-        <AreaChart data={areaChartData} title="Shipment Weights by Package" />
-                <BarChart data={barChartData} title="User Weights Distribution" />
+        <AreaChart data={areaChartData} title="Registered Users" />
+                <BarChart data={barChartData} title="Products Purschaseed" />
         </div>           
           </main>
         </div>

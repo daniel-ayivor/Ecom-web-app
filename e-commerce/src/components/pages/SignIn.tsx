@@ -6,16 +6,50 @@ import Loader from "../../utils/Loader";
 
 
 import { LoginTypes } from "@/types/authTypes";
+import { useNavigate } from "react-router-dom";
 
 
 const SignIn = () => {
   const [isSubmitting, setSubmitting] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginTypes>();
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-  // Handle form submission
-  const onSubmit: SubmitHandler<LoginTypes> = async () => {
-   
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginTypes>();
+
+  const onSubmit: SubmitHandler<LoginTypes> = async (data) => {
+    setSubmitting(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.token) {
+        // Save the token and navigate to the dashboard
+        localStorage.setItem("access_token", result.token);
+        navigate("/index");
+
+        // Log user data for debugging purposes
+        console.log("Logged in user:", result.user);
+
+        toast.success("Login successful!");
+      } else {
+        toast.error(result.message || "Failed to login.");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      toast.error("Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

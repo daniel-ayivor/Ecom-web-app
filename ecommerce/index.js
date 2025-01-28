@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require("cors");
 const bodyParser = require('body-parser');
 const { config } = require('dotenv');
+const path = require('path');
 const sequelize = require('./Database/database');
 const Product = require('./Models/productModel');
 const User = require("./Models/userModel");
@@ -17,6 +18,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
+app.use("/uploads",express.static(path.join(__dirname,'uploads')));
 
 // Mount the user routes with a base path
 app.use( authRoute);

@@ -1,7 +1,72 @@
-import Footer from "../Footer/Footer"
-import Navbar from "../Navbar/Navbar"
+import { useParams } from "react-router-dom";
+import Footer from "../Footer/Footer";
+import Navbar from "../Navbar/Navbar";
+import { useEffect, useState } from "react";
+import { ProductAttributes, productResponse } from "@/Admin/Dialogs/ProductDialog";
+import Rating from "../Product/Rating";
+import { useCart } from "../contexts/CartContext";
+import toast from "react-hot-toast";
+
 const CartDetails = () => {
- return (
+  const { id } = useParams();
+  const [product, setProduct] = useState<ProductAttributes | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+ const {addItem} = useCart()
+   
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) {
+        setError("Product ID is missing.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/${id}`);
+        if (!response.ok) {
+          setError(`Error: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to fetch product.`);
+        }
+        const data: productResponse = await response.json();
+  
+        setProduct(data.product);
+      } catch (error) {
+        setError("Error fetching product.");
+        console.log("Error fetching data: ", error);  
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!product) {
+    return <div>Product not found.</div>;
+  }
+
+  const handleAddToCart = (product: ProductAttributes) => {
+    addItem({
+      id: product.id,
+      name: product.title,
+      quantity: 1,
+      image:product.image,
+      price:product.price
+    });
+    toast.success(`${product.title} added to cart`);
+  };
+
+  return (
     <>
    
    <Navbar />
@@ -15,35 +80,22 @@ const CartDetails = () => {
          <div className=" flex w-full items-center overflow-hidden bg-white px-4 pb-8 pt-14  sm:px-6 sm:pt-8 md:p-6 lg:p-8">
      
            <div className="grid w-full grid-cols-1 items-start gap-x-6 gap-y-8 sm:grid-cols-12 lg:gap-x-8">
-             <img src="https://tailwindui.com/plus/img/ecommerce-images/product-quick-preview-02-detail.jpg" alt="Two each of gray, white, and black shirts arranged on table." className="aspect-[2/3] w-full rounded-lg bg-gray-100 object-cover sm:col-span-4 lg:col-span-5"/>
+             <img  src={`http://localhost:8000/${product.image}`|| "/fallback-image.jpg"} alt="Two each of gray, white, and black shirts arranged on table." className="aspect-[2/3] w-full rounded-lg bg-gray-100 object-cover sm:col-span-4 lg:col-span-5"/>
              <div className="sm:col-span-8 lg:col-span-7">
-               <h2 className="text-2xl font-bold text-gray-900 sm:pr-12">Basic Tee 6-Pack</h2>
+               <h2 className="text-2xl font-bold text-gray-900 sm:pr-12">{product?.title}</h2>
                <p className="">Men's running shoes in sizes 8-12, designed for a comfortable and supportive fit, perfect for active lifestyles</p>
+               <p className="">{product?.text}</p>
                <section aria-labelledby="information-heading" className="mt-2">
                  <h3 id="information-heading" className="sr-only">Product information</h3>
-                 <p className="text-2xl text-gray-900">$192</p>
+                 <p className="text-xl text-gray-700">${product?.price}</p>
                  <div className="mt-6">
                    <h4 className="sr-only">Reviews</h4>
                    <div className="flex items-center">
                      <div className="flex items-center">
-                       <svg className="size-5 shrink-0 text-gray-900" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
-                       </svg>
-                       <svg className="size-5 shrink-0 text-gray-900" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
-                       </svg>
-                       <svg className="size-5 shrink-0 text-gray-900" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
-                       </svg>
-                       <svg className="size-5 shrink-0 text-gray-900" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
-                       </svg>
-                       <svg className="size-5 shrink-0 text-gray-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                         <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
-                       </svg>
+                     <Rating />
                      </div>
-                     <p className="sr-only">3.9 out of 5 stars</p>
-                     <a href="#" className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">117 reviews</a>
+                     <p className="sr-only">3.9 out of {product?.rating} stars</p>
+                     <a href="#" className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500">({product?.rating})</a>
                    </div>
                  </div>
                </section>
@@ -51,7 +103,7 @@ const CartDetails = () => {
                  <h3 id="options-heading" className="sr-only">Product options</h3>
                  <form>
               
-                   <fieldset aria-label="Choose a color">
+                   {/* <fieldset aria-label="Choose a color">
                      <legend className="text-sm font-medium text-gray-900">Color</legend>
                      <div className="mt-4 flex items-center gap-x-3">
           
@@ -70,7 +122,9 @@ const CartDetails = () => {
                          <span aria-hidden="true" className="size-8 rounded-full border border-black/10 bg-gray-900"></span>
                        </label>
                      </div>
-                   </fieldset>
+                   </fieldset> */}
+
+                   
        
                    <fieldset className="mt-10" aria-label="Choose a size">
                      <div className="flex items-center justify-between">
@@ -79,66 +133,70 @@ const CartDetails = () => {
                      </div>
                      <div className="mt-4 grid grid-cols-4 gap-4">
                 
-                       <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="XXS" className="sr-only"/>
-                         <span>XXS</span>
-                
-                         <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
-                       </label>
-                 
-                       <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="XS" className="sr-only"/>
-                         <span>XS</span>
-                 
-                         <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
-                       </label>
-                  
-                       <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="S" className="sr-only"/>
-                         <span>S</span>
                     
-                         <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
-                       </label>
-                       <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="M" className="sr-only"/>
-                         <span>M</span>
-                 
-                         <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
-                       </label>
-               
-                       <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="L" className="sr-only"/>
-                         <span>L</span>
-                   
-                         <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
-                       </label>
+                    
+                     <div className="absolute top-4 right-4 flex space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <a className="">                          
+                                <button
+                                    type="button"
+                                    className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                >
+                                    <span className="sr-only">View notifications</span>
+                                    <svg
+                                        className="h-6 w-6 text-gray-300 hover:text-red-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="2"
+                                        stroke="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 3C7.03 3 2.52 6.58 1.04 10.94a1 1 0 0 0 0 0.12C2.52 17.42 7.03 21 12 21s9.48-3.58 10.96-7.94a1 1 0 0 0 0-0.12C21.48 6.58 16.97 3 12 3zm0 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"
+                                        />
+                                    </svg>
+
+                                </button>
+                                </a>
+
+                                <button
+                               
+                                 className='relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'>
+                                    <svg
+                                        className="w-6 h-6 text-red-300 hover:text-white "
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M11.998 21.163l-1.428-1.286C5.835 15.635 3 12.874 3 9.497 3 6.989 4.86 5 7.348 5c1.553 0 3.013.763 3.894 2.03C12.64 5.763 14.1 5 15.653 5 18.141 5 20 6.989 20 9.497c0 3.377-2.835 6.138-7.57 10.38l-1.432 1.286z"
+                                        />
+                                    </svg>
+
+
+                                </button>
+                            </div>
+
+                    
                   
                        <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
                          <input type="radio" name="size-choice" value="XL" className="sr-only"/>
-                         <span>XL</span>
+                         <span>{product.size}</span>
                    
                          <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
                        </label>
               
-                       <label className="group relative flex cursor-pointer items-center justify-center rounded-md border bg-white px-4 py-3 text-sm font-medium uppercase text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="XXL" className="sr-only"/>
-                         <span>XXL</span>
-                  
-                         <span className="pointer-events-none absolute -inset-px rounded-md" aria-hidden="true"></span>
-                       </label>
+                     
            
-                       <label className="group relative flex cursor-not-allowed items-center justify-center rounded-md border bg-gray-50 px-4 py-3 text-sm font-medium uppercase text-gray-200 hover:bg-gray-50 focus:outline-none sm:flex-1">
-                         <input type="radio" name="size-choice" value="XXXL" disabled className="sr-only"/>
-                         <span>XXXL</span>
-                         <span aria-hidden="true" className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200">
-                           <svg className="absolute inset-0 size-full stroke-2 text-gray-200" viewBox="0 0 100 100" preserveAspectRatio="none" stroke="currentColor">
-                             <line x1="0" y1="100" x2="100" y2="0" vector-effect="non-scaling-stroke" />
-                           </svg>
-                         </span>
-                       </label>
+                    
                      </div>
                    </fieldset>
-                   <button type="submit" className="mt-6 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Add to cart</button>
+                   <button onClick={()=> handleAddToCart(product)} type="button" className="mt-6 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Add to cart</button>
                  </form>
                </section>
              </div>
@@ -153,7 +211,7 @@ const CartDetails = () => {
 </div>
 <Footer/>
 </>
-  )
-}
+  );
+};
 
-export default CartDetails
+export default CartDetails;

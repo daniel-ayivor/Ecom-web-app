@@ -7,18 +7,26 @@ const Product = sequelize.define('Product', {
         autoIncrement: true,
         primaryKey: true
     },
+    // image: {
+    //     type: DataTypes.STRING,
+    //     allowNull: true,
+    //     validate: {
+    //         isUrl: true, 
+    //         isImage(value) {
+    //             const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    //             if (value && !validExtensions.some(ext => value.endsWith(ext))) {
+    //                 throw new Error('Only image formats (.jpg, .jpeg, .png, .gif, .webp) are allowed');
+    //             }
+    //         }
+    //     }
+    // },
     image: {
-        type: DataTypes.STRING,
-        allowNull: true,
+        type: DataTypes.STRING, // Expecting a string for the file path
+        allowNull: false,
+        // Remove isUrl validation since it's a local path
         validate: {
-            isUrl: true, // Ensures the value is a valid URL
-            isImage(value) {
-                const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-                if (value && !validExtensions.some(ext => value.endsWith(ext))) {
-                    throw new Error('Only image formats (.jpg, .jpeg, .png, .gif, .webp) are allowed');
-                }
-            }
-        }
+            notEmpty: true, // Ensure the field is not empty
+        },
     },
     title: {
         type: DataTypes.STRING,

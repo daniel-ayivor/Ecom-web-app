@@ -1,16 +1,37 @@
 const Product = require("../Models/productModel");
+const multer = require("multer");
+const path = require("path");
 
-// Create Product
 const createProducts = async (req, res) => {
-    const { image,title, price, rating, category, text, size } = req.body;
     try {
-        const product = await Product.create({image, title, price, rating, category, text, size });
-        res.status(201).json({ product, message: "Product created successfully" });
+        const { title, price, rating, category, text, size } = req.body;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ message: 'Image is required' });
+        }
+
+        // Use the file path (local or base URL + file path)
+        const imagePath = file.path.replace(/\\/g, '/'); // Normalize path for consistency
+
+        // Save the product in the database
+        const product = await Product.create({
+            title,
+            price,
+            rating,
+            category,
+            text,
+            size,
+            image: imagePath, // Save the string path
+        });
+
+        res.status(201).json({ message: 'Product created successfully', product });
     } catch (error) {
-        console.error("Error creating product:", error);
-        res.status(500).json({ error: "Error creating product" });
+        console.error('Error creating product:', error);
+        res.status(500).json({ message: 'Error creating product', error });
     }
 };
+
 
 // Get All Products
 const getProducts = async (req, res) => {
@@ -88,7 +109,7 @@ const rateProduct = async (req, res) => {
         res.status(500).json({ error: "Error updating rating" });
     }
 };
-
+// module.exports = upload;
 module.exports = {
     deletingProduct,
     createProducts,
@@ -96,4 +117,6 @@ module.exports = {
     getProducts,
     rateProduct,
     updateProduct,
+    
+    
 };

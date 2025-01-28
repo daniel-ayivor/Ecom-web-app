@@ -3,9 +3,9 @@ import {
   Home,
   LayoutDashboard,
   LogOut,
-  MonitorCheck,
-  Settings,
+ShoppingBasket,
   Users,
+
 } from "lucide-react";
 import {
   Sidebar,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+
 
 export function DashboardSidebar() {
 
@@ -57,12 +58,17 @@ const logoutUser = () => {
     {
       title: "Analytics",
       icon: AlignHorizontalJustifyEndIcon,
-      url: "/analytics",
+      url: "/analytic",
     },
     {
-      title: "Tracking",
-      icon: MonitorCheck,
-      url: "/tracking",
+      title: "Product",
+      icon: ShoppingBasket,
+      url: "/products",
+    },
+    {
+      title: "Order",
+      icon: ShoppingBasket,
+      url: "/orders",
     },
     {
       title: "Logout",
